@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { createCompany, inviteCompanyUser, listCompanies, setCompanySocia } from '../model/company.js';
 import { closeEdition, createEdition, listEditions } from '../model/edition.js';
 import { ConflictError, InvalidDataError, NotFoundError } from '../model/errors.js';
 import { createStudentAccount, listStudentsForAdmin } from '../model/student.js';
@@ -67,6 +68,49 @@ export function adminRoutes(deps: Deps) {
       return created;
     });
     return c.json({ student }, 201);
+  });
+
+  // --- Empresas ------------------------------------------------------------
+  r.get('/companies', async (c) => {
+    const companies = await deps.transaction((tx) => listCompanies(tx));
+    return c.json({ companies }, 200);
+  });
+
+  // Alta de empresa + primer usuario SOCIO + invitación (todo o nada).
+  r.post('/companies', async (c) => {
+    const body = await readJson(c);
+    if (!body) throw new InvalidDataError();
+    const actorId = c.var.actor.id;
+    const company = await deps.transaction(async (tx) => {
+      const created = await createCompany(tx, actorId, body);
+      await sendInvitation(tx, deps, created.user, actorId);
+      return created.company;
+    });
+    return c.json({ company }, 201);
+  });
+
+  r.patch('/companies/:id', async (c) => {
+    const id = c.req.param('id');
+    if (!isUuid(id)) throw new NotFoundError();
+    const body = await readJson(c);
+    if (!body) throw new InvalidDataError();
+    const actorId = c.var.actor.id;
+    const company = await deps.transaction((tx) => setCompanySocia(tx, actorId, id, body.es_socia));
+    return c.json({ company }, 200);
+  });
+
+  r.post('/companies/:id/users', async (c) => {
+    const id = c.req.param('id');
+    if (!isUuid(id)) throw new NotFoundError();
+    const body = await readJson(c);
+    if (!body) throw new InvalidDataError();
+    const actorId = c.var.actor.id;
+    const company = await deps.transaction(async (tx) => {
+      const added = await inviteCompanyUser(tx, actorId, id, body.email);
+      await sendInvitation(tx, deps, added.user, actorId);
+      return added.company;
+    });
+    return c.json({ company }, 201);
   });
 
   return r;
