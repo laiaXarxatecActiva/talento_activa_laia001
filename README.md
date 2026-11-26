@@ -40,7 +40,8 @@ Opcional:
 ## Flujo de invitación
 
 1. El ADMIN da de alta a un alumno (`POST /api/admin/students`), una empresa
-   (`POST /api/admin/companies`) o una cuenta suelta (`POST /api/auth/register`).
+   (`POST /api/admin/companies`); `POST /api/auth/register` es equivalente
+   (SOCIO con `company_id`, ALUMNO con `edition_id` + `nombre`).
 2. El invitado recibe un email con `APP_URL/verificar?token=…` (7 días, un uso).
 3. El frontend envía `POST /api/auth/verify {token, password}`: fija la
    contraseña y verifica el email. Ya puede hacer login.
