@@ -3,8 +3,10 @@ import { login } from '../model/auth.js';
 import { isValidPasswordLength } from '../model/password.js';
 import { deleteSession } from '../model/session.js';
 import { getPublicUser, inviteUser, type InvitableRol } from '../model/user.js';
+import { consumeVerificationToken } from '../model/verification.js';
 import { buildClearSessionCookie, buildSessionCookie, readSessionToken } from './cookie.js';
 import { readJson, type AppEnv, type Deps } from './http.js';
+import { sendInvitation } from './invitation.js';
 import { requireAuth } from './middleware.js';
 
 /** Rutas de autenticación: /api/auth/* y /api/me. */
@@ -41,8 +43,22 @@ export function authRoutes(deps: Deps) {
     if (typeof email !== 'string' || typeof rol !== 'string') return c.json({ error: 'Datos no válidos' }, 400);
 
     const actorId = c.var.actor.id;
-    const user = await deps.transaction((tx) => inviteUser(tx, actorId, { email, rol: rol as InvitableRol }));
+    const user = await deps.transaction(async (tx) => {
+      const created = await inviteUser(tx, actorId, { email, rol: rol as InvitableRol });
+      await sendInvitation(tx, deps, created, actorId);
+      return created;
+    });
     return c.json({ user }, 201);
+  });
+
+  // Público: el invitado fija su contraseña con el token del email.
+  r.post('/auth/verify', async (c) => {
+    const body = await readJson(c);
+    const token = body?.token;
+    const password = body?.password;
+    if (typeof token !== 'string' || typeof password !== 'string') return c.json({ error: 'Datos no válidos' }, 400);
+    const user = await deps.transaction((tx) => consumeVerificationToken(tx, token, password));
+    return c.json({ user }, 200);
   });
 
   r.get('/me', requireAuth(deps), async (c) => {

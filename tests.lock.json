@@ -52,6 +52,18 @@
     "tests/model/admin-bootstrap.test.ts": {
       "sha256": "1cc1b87769d96517b8763f8aa1d213b4a32aae6798f90ee55e7a83ed81beb595",
       "lockedAt": "2026-11-26T10:51:04.658Z"
+    },
+    "tests/model/email.test.ts": {
+      "sha256": "522a928e614d506c8ad761daf817de00a31570b68f8299338a64f718870b13c4",
+      "lockedAt": "2026-11-26T10:56:04.130Z"
+    },
+    "tests/model/verification.test.ts": {
+      "sha256": "820216cf57520a45a9be8c7000af3b207c2bbb418e810d529b001cefd4a10557",
+      "lockedAt": "2026-11-26T10:56:04.131Z"
+    },
+    "tests/controller/auth-verify.test.ts": {
+      "sha256": "cfbb53efc40dc35ea3fadf91923d0984913d2f7d10999abf6891ed23e7e5f265",
+      "lockedAt": "2026-11-26T10:56:04.131Z"
     }
   }
 }

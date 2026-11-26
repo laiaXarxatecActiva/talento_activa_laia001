@@ -98,7 +98,7 @@ En cada conexión, de forma autónoma:
   Tests de acceso por rol.
 - [x] **T10 · Registro restringido:** `POST /api/auth/register` solo ADMIN (alta por
   invitación). Tests.
-- [ ] **T11 · Verificación de email:** token de un solo uso con caducidad + envío;
+- [x] **T11 · Verificación de email:** token de un solo uso con caducidad + envío;
   bloquear acceso hasta verificar. Tests.
 
 ### Administración

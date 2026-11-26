@@ -30,3 +30,19 @@ export class InvalidCredentialsError extends Error {
     this.name = 'InvalidCredentialsError';
   }
 }
+
+/** Recurso inexistente (o que el actor no puede ver). El controlador → 404. */
+export class NotFoundError extends Error {
+  constructor(message = 'No encontrado') {
+    super(message);
+    this.name = 'NotFoundError';
+  }
+}
+
+/** Fallo del proveedor de email. El controlador → 502. */
+export class EmailDeliveryError extends Error {
+  constructor() {
+    super('No se ha podido enviar el email');
+    this.name = 'EmailDeliveryError';
+  }
+}
