@@ -94,7 +94,7 @@ En cada conexión, de forma autónoma:
   coste temporal). Tests incl. tiempos.
 - [x] **T08 · Logout y /me:** `POST /api/auth/logout` (idempotente, limpia cookie)
   y `GET /api/me` (proyección pública sin hash). Tests.
-- [ ] **T09 · Middleware de autorización:** resuelve sesión y exige rol por ruta.
+- [x] **T09 · Middleware de autorización:** resuelve sesión y exige rol por ruta.
   Tests de acceso por rol.
 - [ ] **T10 · Registro restringido:** `POST /api/auth/register` solo ADMIN (alta por
   invitación). Tests.

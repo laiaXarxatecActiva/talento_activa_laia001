@@ -15,6 +15,8 @@ export interface Actor {
 
 export interface ResolvedSession {
   actor: Actor;
+  /** Si el usuario ha verificado su email (sin verificar no hay acceso real). */
+  emailVerified: boolean;
   /** Caducidad vigente (la nueva si se ha renovado). */
   expiresAt: Date;
   /** `true` si se ha extendido la caducidad: hay que reponer la cookie. */
@@ -103,8 +105,10 @@ export async function resolveSession(
 ): Promise<ResolvedSession | null> {
   if (!TOKEN_RE.test(token)) return null;
 
-  const [row] = await tx<{ id: string; user_id: string; expires_at: Date; rol: Rol | null }[]>`
-    select s.id, s.user_id, s.expires_at, u.rol
+  const [row] = await tx<
+    { id: string; user_id: string; expires_at: Date; rol: Rol | null; email_verified: boolean | null }[]
+  >`
+    select s.id, s.user_id, s.expires_at, u.rol, u.email_verified
     from "Session" s
     left join "User" u on u.id = s.user_id
     where s.token_sha256 = ${hashSessionToken(token)}
@@ -124,9 +128,10 @@ export async function resolveSession(
   }
 
   const actor: Actor = { id: row.user_id, rol: row.rol };
+  const emailVerified = row.email_verified === true;
 
   if (row.expires_at.getTime() - now.getTime() >= SESSION_RENEW_THRESHOLD_MS) {
-    return { actor, expiresAt: row.expires_at, renewed: false };
+    return { actor, emailVerified, expiresAt: row.expires_at, renewed: false };
   }
 
   const expiresAt = new Date(now.getTime() + SESSION_DURATION_MS);
@@ -139,5 +144,5 @@ export async function resolveSession(
     datosAnteriores: { expires_at: row.expires_at },
     datosNuevos: { expires_at: expiresAt },
   });
-  return { actor, expiresAt, renewed: true };
+  return { actor, emailVerified, expiresAt, renewed: true };
 }

@@ -9,6 +9,7 @@ import type { AppEnv, Deps } from './http.js';
  * `Actor {id, rol}` en `c.var.actor` y repone la cookie si se renovó.
  *
  * - Sin sesión válida → 401 (y limpia la cookie si traía una).
+ * - Email sin verificar → 403 (hasta verificar no hay acceso real).
  * - Rol no permitido → 403.
  */
 export function requireAuth(deps: Pick<Deps, 'transaction'>, ...roles: Rol[]) {
@@ -22,6 +23,9 @@ export function requireAuth(deps: Pick<Deps, 'transaction'>, ...roles: Rol[]) {
     }
     if (resolved.renewed && token) {
       c.header('Set-Cookie', buildSessionCookie(token, resolved.expiresAt));
+    }
+    if (!resolved.emailVerified) {
+      return c.json({ error: 'Email no verificado' }, 403);
     }
     if (roles.length > 0 && !roles.includes(resolved.actor.rol)) {
       return c.json({ error: 'No autorizado' }, 403);
