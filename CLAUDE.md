@@ -11,14 +11,16 @@ con éxito**; nunca datos de quienes no completaron la formación.
 
 ## Estado del repo
 
-En **fase de diseño**: todavía no hay código de aplicación ni tooling de build.
-La fuente de verdad vive en `docs/` y `seed.sql`. Lee esos documentos antes de
-implementar — definen decisiones ya cerradas con el cliente, no suposiciones.
+**Fase 1 (Núcleo) del backend implementada** (T00–T19 en
+`docs/plan-desarrollo.md`), con tests de integración contra Supabase. Aún no
+hay frontend (`src/view`). Puesta en marcha y referencia de la API en
+`README.md`. La especificación sigue viviendo en `docs/` y `docs/seed.sql`:
+léela antes de implementar — define decisiones ya cerradas con el cliente.
 
 - `docs/casos-de-uso.md` — casos de uso originales (actor / objetivo / excepciones).
 - `docs/especificacion.md` — especificación funcional, roles, seguridad, fases y modelo.
 - `docs/modelo-entidad-relacion.md` — diagrama ER (Mermaid) y convenciones de BD.
-- `seed.sql` — DDL completo + seed de referencia para Postgres/Supabase.
+- `docs/seed.sql` — DDL completo + seed de referencia para Postgres/Supabase.
 
 ## Stack previsto
 
