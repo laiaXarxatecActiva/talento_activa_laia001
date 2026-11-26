@@ -80,6 +80,10 @@
     "tests/controller/students-ficha.test.ts": {
       "sha256": "895242cfd485bbdfc418f10593db6cc91b73133f50cf0fadcd82ce96d2225f37",
       "lockedAt": "2026-11-26T11:14:50.777Z"
+    },
+    "tests/controller/students-estado.test.ts": {
+      "sha256": "d64a95c64ac6c787a9c69306e2b9f56aa7d9a71b96ae8ca3cc3d38e59cec49f7",
+      "lockedAt": "2026-11-26T11:20:35.821Z"
     }
   }
 }

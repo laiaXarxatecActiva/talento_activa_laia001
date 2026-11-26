@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { NotFoundError, InvalidDataError } from '../model/errors.js';
-import { getStudentFichaByUser, getStudentForViewer, updateOwnStudent } from '../model/student.js';
+import { getStudentFichaByUser, getStudentForViewer, setStudentEstado, updateOwnStudent } from '../model/student.js';
 import { isUuid, readJson, type AppEnv, type Deps } from './http.js';
 import { requireAuth } from './middleware.js';
 
@@ -21,6 +21,18 @@ export function studentRoutes(deps: Deps) {
     if (!body) throw new InvalidDataError();
     const userId = c.var.actor.id;
     const student = await deps.transaction((tx) => updateOwnStudent(tx, userId, body));
+    return c.json({ student }, 200);
+  });
+
+  r.patch('/me/estado', requireAuth(deps, 'ALUMNO'), async (c) => {
+    const body = await readJson(c);
+    if (!body) throw new InvalidDataError();
+    const userId = c.var.actor.id;
+    const student = await deps.transaction(async (tx) => {
+      const own = await getStudentFichaByUser(tx, userId);
+      if (!own) throw new NotFoundError();
+      return setStudentEstado(tx, userId, own.id, body.estado);
+    });
     return c.json({ student }, 200);
   });
 

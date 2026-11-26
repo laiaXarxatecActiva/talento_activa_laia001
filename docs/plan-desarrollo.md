@@ -111,7 +111,7 @@ En cada conexión, de forma autónoma:
 ### Alumno
 - [x] **T15 · Ficha de alumno:** modelo `Student` + endpoints de lectura/edición de
   su ficha; `privacy` por campo. Tests.
-- [ ] **T16 · Estado activo/inactivo:** el alumno (y el admin) cambian `estado`;
+- [x] **T16 · Estado activo/inactivo:** el alumno (y el admin) cambian `estado`;
   un `inactivo` no es consultable por empresas. Tests de enforcement.
 - [ ] **T17 · Derecho al olvido:** borrado en cascada de datos del alumno. Tests.
 - [ ] **T18 · Proyectos:** CRUD de `Project` vinculado al alumno; validar URL;

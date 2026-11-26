@@ -1,6 +1,6 @@
 import type { TransactionSql } from 'postgres';
 import { writeAudit } from './audit.js';
-import { InvalidDataError, NotFoundError } from './errors.js';
+import { ConflictError, InvalidDataError, NotFoundError } from './errors.js';
 import { getEdition } from './edition.js';
 import { inviteUser } from './user.js';
 import { boolean, optionalEnum, optionalHttpUrl, optionalText, requiredText, uuid } from './validation.js';
@@ -331,4 +331,38 @@ export async function updateOwnStudent(
   });
 
   return (await getStudentFicha(tx, current.id))!;
+}
+
+export const STUDENT_ESTADOS = ['activo', 'inactivo'] as const;
+
+/**
+ * Cambia el estado activo/inactivo (alumno o admin). Activar exige
+ * consentimiento. Inactivo = sus datos siguen pero ninguna empresa lo ve.
+ * Idempotente (sin cambio no audita).
+ */
+export async function setStudentEstado(
+  tx: TransactionSql,
+  actorId: string,
+  studentId: string,
+  estadoInput: unknown,
+): Promise<StudentFicha> {
+  const estado = optionalEnum(estadoInput, STUDENT_ESTADOS);
+  if (estado === null) throw new InvalidDataError();
+  const current = await getStudentFicha(tx, studentId);
+  if (!current) throw new NotFoundError();
+  if (estado === 'activo' && current.consent_at === null) {
+    throw new ConflictError('Para activar el perfil hace falta el consentimiento del alumno');
+  }
+  if (current.estado === estado) return current;
+
+  await tx`update "Student" set estado = ${estado} where id = ${studentId}`;
+  await writeAudit(tx, {
+    idUsuario: actorId,
+    tabla: 'Student',
+    idRegistro: studentId,
+    operacion: 'UPDATE',
+    datosAnteriores: { estado: current.estado },
+    datosNuevos: { estado },
+  });
+  return { ...current, estado };
 }
