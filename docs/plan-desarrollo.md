@@ -84,7 +84,7 @@ En cada conexión, de forma autónoma:
   longitud 12–256 → error de datos no válidos. Tests de hash/verify y límites.
 - [x] **T04 · Modelo User:** alta por invitación (rol, `email_verified=false`),
   email único sobre `lower(email)`. Tests.
-- [ ] **T05 · Sesiones:** token opaco 32 bytes base64url; guardar solo SHA-256;
+- [x] **T05 · Sesiones:** token opaco 32 bytes base64url; guardar solo SHA-256;
   resolver sesión (null + borrado si no existe/caduca/usuario inexistente) y
   devolver `Actor {id, rol}`; renovación deslizante (<15 días → 30). Tests.
 - [ ] **T06 · Cookie de sesión:** helpers para `sesion` (`HttpOnly`, `SameSite=Lax`,
