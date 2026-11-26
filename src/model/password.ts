@@ -21,11 +21,13 @@ const ARGON2_OPTIONS = {
  * Se cuentan caracteres (code points), no unidades UTF-16. El límite superior
  * evita además gastar CPU hasheando entradas enormes.
  */
-function assertPasswordLength(plain: string): void {
+export function isValidPasswordLength(plain: string): boolean {
   const length = [...plain].length;
-  if (length < PASSWORD_MIN_LENGTH || length > PASSWORD_MAX_LENGTH) {
-    throw new InvalidDataError('Datos no válidos');
-  }
+  return length >= PASSWORD_MIN_LENGTH && length <= PASSWORD_MAX_LENGTH;
+}
+
+function assertPasswordLength(plain: string): void {
+  if (!isValidPasswordLength(plain)) throw new InvalidDataError('Datos no válidos');
 }
 
 /** Devuelve el hash Argon2id (formato PHC, con sal aleatoria) de la contraseña. */

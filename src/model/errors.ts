@@ -19,3 +19,14 @@ export class ConflictError extends Error {
     this.name = 'ConflictError';
   }
 }
+
+/**
+ * Login fallido. Mismo mensaje exista o no el email (anti-enumeración).
+ * El controlador → 401.
+ */
+export class InvalidCredentialsError extends Error {
+  constructor() {
+    super('Credenciales no válidas');
+    this.name = 'InvalidCredentialsError';
+  }
+}

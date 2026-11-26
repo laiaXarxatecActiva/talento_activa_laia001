@@ -89,7 +89,7 @@ En cada conexión, de forma autónoma:
   devolver `Actor {id, rol}`; renovación deslizante (<15 días → 30). Tests.
 - [x] **T06 · Cookie de sesión:** helpers para `sesion` (`HttpOnly`, `SameSite=Lax`,
   `Path=/`, `Secure` en prod, `Expires` absoluto). Tests.
-- [ ] **T07 · Login:** `POST /api/auth/login` crea sesión nueva e invalida la
+- [x] **T07 · Login:** `POST /api/auth/login` crea sesión nueva e invalida la
   previa de la cookie; anti-enumeración con `HASH_SEÑUELO` (mismo error y mismo
   coste temporal). Tests incl. tiempos.
 - [ ] **T08 · Logout y /me:** `POST /api/auth/logout` (idempotente, limpia cookie)

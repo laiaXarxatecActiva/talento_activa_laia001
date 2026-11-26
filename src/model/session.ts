@@ -64,6 +64,30 @@ export async function createSession(
 }
 
 /**
+ * Borra la sesión del token (logout / invalidar la previa en login).
+ * Idempotente: `false` si el token no es válido o no existe.
+ * @param actorId autor del borrado para la auditoría.
+ */
+export async function deleteSession(tx: TransactionSql, token: string, actorId: string | null): Promise<boolean> {
+  if (!TOKEN_RE.test(token)) return false;
+
+  const [row] = await tx<{ id: string; user_id: string; expires_at: Date }[]>`
+    delete from "Session" where token_sha256 = ${hashSessionToken(token)}
+    returning id, user_id, expires_at
+  `;
+  if (!row) return false;
+
+  await writeAudit(tx, {
+    idUsuario: actorId,
+    tabla: 'Session',
+    idRegistro: row.id,
+    operacion: 'DELETE',
+    datosAnteriores: { user_id: row.user_id, expires_at: row.expires_at },
+  });
+  return true;
+}
+
+/**
  * Resuelve un token de sesión.
  *
  * - Token mal formado o inexistente → `null`.

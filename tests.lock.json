@@ -24,6 +24,18 @@
     "tests/controller/cookie.test.ts": {
       "sha256": "814f3b87dae911b2abd802f7e85be001617b339ec01925a1fbf96e5bbabcb29e",
       "lockedAt": "2026-11-26T10:24:21.807Z"
+    },
+    "tests/model/session-delete.test.ts": {
+      "sha256": "6aaf5dea6d0da0e3f6321c698bb9c96826d4ee14a4037e7581456e09c33e502d",
+      "lockedAt": "2026-11-26T10:29:13.258Z"
+    },
+    "tests/model/auth.test.ts": {
+      "sha256": "1ec2340b11997803bfe3db2730378429d1adda67b3c0347f493fc840b80e8912",
+      "lockedAt": "2026-11-26T10:29:13.258Z"
+    },
+    "tests/controller/auth-login.test.ts": {
+      "sha256": "4eab871f5fa72bbd7e1763411f7da2abc1d10822a35b15b881dd8bb355cf2f05",
+      "lockedAt": "2026-11-26T10:29:13.259Z"
     }
   }
 }
