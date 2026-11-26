@@ -66,9 +66,10 @@ export async function createSession(
 /**
  * Borra la sesión del token (logout / invalidar la previa en login).
  * Idempotente: `false` si el token no es válido o no existe.
- * @param actorId autor del borrado para la auditoría.
+ * @param actorId autor del borrado para la auditoría; si se omite, el dueño
+ *        de la sesión (p. ej. en el logout).
  */
-export async function deleteSession(tx: TransactionSql, token: string, actorId: string | null): Promise<boolean> {
+export async function deleteSession(tx: TransactionSql, token: string, actorId?: string | null): Promise<boolean> {
   if (!TOKEN_RE.test(token)) return false;
 
   const [row] = await tx<{ id: string; user_id: string; expires_at: Date }[]>`
@@ -78,7 +79,7 @@ export async function deleteSession(tx: TransactionSql, token: string, actorId: 
   if (!row) return false;
 
   await writeAudit(tx, {
-    idUsuario: actorId,
+    idUsuario: actorId === undefined ? row.user_id : actorId,
     tabla: 'Session',
     idRegistro: row.id,
     operacion: 'DELETE',

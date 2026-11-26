@@ -92,7 +92,7 @@ En cada conexión, de forma autónoma:
 - [x] **T07 · Login:** `POST /api/auth/login` crea sesión nueva e invalida la
   previa de la cookie; anti-enumeración con `HASH_SEÑUELO` (mismo error y mismo
   coste temporal). Tests incl. tiempos.
-- [ ] **T08 · Logout y /me:** `POST /api/auth/logout` (idempotente, limpia cookie)
+- [x] **T08 · Logout y /me:** `POST /api/auth/logout` (idempotente, limpia cookie)
   y `GET /api/me` (proyección pública sin hash). Tests.
 - [ ] **T09 · Middleware de autorización:** resuelve sesión y exige rol por ruta.
   Tests de acceso por rol.

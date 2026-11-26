@@ -81,3 +81,11 @@ export async function createUser(tx: TransactionSql, actorId: string | null, inp
     throw e;
   }
 }
+
+/** Usuario por id en su proyección pública (sin hash), o `null`. */
+export async function getPublicUser(tx: TransactionSql, id: string): Promise<PublicUser | null> {
+  const [user] = await tx<PublicUser[]>`
+    select id, email, rol, email_verified, created_at from "User" where id = ${id}
+  `;
+  return user ?? null;
+}

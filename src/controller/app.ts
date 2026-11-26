@@ -1,58 +1,45 @@
-import { Hono, type Context } from 'hono';
-import type { TransactionSql } from 'postgres';
-import { login } from '../model/auth.js';
-import { InvalidCredentialsError, InvalidDataError } from '../model/errors.js';
-import { isValidPasswordLength } from '../model/password.js';
-import { buildSessionCookie, readSessionToken } from './cookie.js';
+import { Hono } from 'hono';
+import type { EmailMessage, EmailSender } from '../model/email.js';
+import { ConflictError, InvalidCredentialsError, InvalidDataError } from '../model/errors.js';
+import { authRoutes } from './auth.js';
+import type { AppEnv, Deps, Transaction } from './http.js';
 
-// Réplica del tipo (no exportado) de `postgres` para `begin`/`savepoint`.
-type UnwrapPromiseArray<T> = T extends any[] ? { [k in keyof T]: T[k] extends Promise<infer R> ? R : T[k] } : T;
-
-/**
- * Ejecuta `work` en una transacción. En producción es `sql.begin`; en los tests
- * se abre un savepoint dentro de una transacción que luego se deshace.
- */
-export type Transaction = <T>(work: (tx: TransactionSql) => T | Promise<T>) => Promise<UnwrapPromiseArray<T>>;
+export type { Transaction } from './http.js';
 
 export interface AppDeps {
   transaction: Transaction;
+  /** Envío de emails. Por defecto, los escribe en consola (desarrollo). */
+  email?: EmailSender;
+  /** URL pública para enlaces en emails. Por defecto, APP_URL o localhost. */
+  appUrl?: string;
 }
 
-function invalidData(c: Context) {
-  return c.json({ error: 'Datos no válidos' }, 400);
-}
+const consoleEmail: EmailSender = {
+  async send(m: EmailMessage) {
+    console.log(`[email] Para: ${m.to} | Asunto: ${m.subject}\n${m.text}`);
+  },
+};
 
-async function readJson(c: Context): Promise<Record<string, unknown> | null> {
-  try {
-    const body: unknown = await c.req.json();
-    return typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : null;
-  } catch {
-    return null;
-  }
-}
+export function createApp(appDeps: AppDeps) {
+  const deps: Deps = {
+    transaction: appDeps.transaction,
+    email: appDeps.email ?? consoleEmail,
+    appUrl: appDeps.appUrl ?? process.env.APP_URL ?? 'http://localhost:3000',
+  };
 
-export function createApp({ transaction }: AppDeps) {
-  const app = new Hono();
+  const app = new Hono<AppEnv>();
 
-  app.post('/api/auth/login', async (c) => {
-    const body = await readJson(c);
-    const email = body?.email;
-    const password = body?.password;
-    if (typeof email !== 'string' || typeof password !== 'string') return invalidData(c);
-    // Rechazo temprano: no abre transacción ni toca la BD (y no depende del email).
-    if (!isValidPasswordLength(password)) return invalidData(c);
-
-    const previousToken = readSessionToken(c.req.header('Cookie'));
-    try {
-      const { user, token, expiresAt } = await transaction((tx) => login(tx, email, password, previousToken));
-      c.header('Set-Cookie', buildSessionCookie(token, expiresAt));
-      return c.json({ user }, 200);
-    } catch (e) {
-      if (e instanceof InvalidDataError) return invalidData(c);
-      if (e instanceof InvalidCredentialsError) return c.json({ error: e.message }, 401);
-      throw e;
-    }
+  // Traduce los errores del modelo a respuestas HTTP. Lo no previsto → 500
+  // genérico (sin filtrar detalles internos).
+  app.onError((err, c) => {
+    if (err instanceof InvalidDataError) return c.json({ error: err.message }, 400);
+    if (err instanceof InvalidCredentialsError) return c.json({ error: err.message }, 401);
+    if (err instanceof ConflictError) return c.json({ error: err.message }, 409);
+    console.error(err);
+    return c.json({ error: 'Error interno' }, 500);
   });
+
+  app.route('/api', authRoutes(deps));
 
   return app;
 }
