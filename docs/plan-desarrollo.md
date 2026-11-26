@@ -82,7 +82,7 @@ En cada conexión, de forma autónoma:
 ### Autenticación
 - [x] **T03 · Hashing de contraseñas:** Argon2id `m=19456,t=2,p=1`; validación de
   longitud 12–256 → error de datos no válidos. Tests de hash/verify y límites.
-- [ ] **T04 · Modelo User:** alta por invitación (rol, `email_verified=false`),
+- [x] **T04 · Modelo User:** alta por invitación (rol, `email_verified=false`),
   email único sobre `lower(email)`. Tests.
 - [ ] **T05 · Sesiones:** token opaco 32 bytes base64url; guardar solo SHA-256;
   resolver sesión (null + borrado si no existe/caduca/usuario inexistente) y

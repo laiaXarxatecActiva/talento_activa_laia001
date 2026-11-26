@@ -8,3 +8,14 @@ export class InvalidDataError extends Error {
     this.name = 'InvalidDataError';
   }
 }
+
+/**
+ * Conflicto con el estado actual (p. ej. email ya registrado). El mensaje por
+ * defecto es genérico a propósito (anti-enumeración). El controlador → 409.
+ */
+export class ConflictError extends Error {
+  constructor(message = 'No se ha podido completar el registro') {
+    super(message);
+    this.name = 'ConflictError';
+  }
+}
