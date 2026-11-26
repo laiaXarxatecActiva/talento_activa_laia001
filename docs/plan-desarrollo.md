@@ -87,7 +87,7 @@ En cada conexión, de forma autónoma:
 - [x] **T05 · Sesiones:** token opaco 32 bytes base64url; guardar solo SHA-256;
   resolver sesión (null + borrado si no existe/caduca/usuario inexistente) y
   devolver `Actor {id, rol}`; renovación deslizante (<15 días → 30). Tests.
-- [ ] **T06 · Cookie de sesión:** helpers para `sesion` (`HttpOnly`, `SameSite=Lax`,
+- [x] **T06 · Cookie de sesión:** helpers para `sesion` (`HttpOnly`, `SameSite=Lax`,
   `Path=/`, `Secure` en prod, `Expires` absoluto). Tests.
 - [ ] **T07 · Login:** `POST /api/auth/login` crea sesión nueva e invalida la
   previa de la cookie; anti-enumeración con `HASH_SEÑUELO` (mismo error y mismo
