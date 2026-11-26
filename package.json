@@ -1,0 +1,25 @@
+{
+  "name": "app-alumnos-activa",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "App web de perfiles de alumnos Xarxatec Activa para empresas.",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "check:locked": "node scripts/check-locked-tests.mjs check"
+  },
+  "dependencies": {
+    "postgres": "^3.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "dotenv": "^16.4.7",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

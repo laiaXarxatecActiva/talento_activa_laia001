@@ -1,0 +1,15 @@
+# Dependencias
+node_modules/
+
+# Builds
+dist/
+build/
+coverage/
+
+# Entorno
+.env
+.env.*
+!.env.example
+
+# Config local de Claude Code (no se comparte)
+.claude/settings.local.json

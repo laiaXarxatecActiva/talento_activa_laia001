@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/check-locked-tests.mjs check 1>/dev/null || exit 2",
+            "statusMessage": "Comprobando tests bloqueados..."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "locked": {
+    "tests/model/db.test.ts": {
+      "sha256": "cc7dce491d4917acb4cc09e95323116805109f599b65d027ddca66527058b4a0",
+      "lockedAt": "2026-11-26T09:34:48.323Z"
+    }
+  }
+}
