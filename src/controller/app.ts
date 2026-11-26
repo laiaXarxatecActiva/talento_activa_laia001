@@ -6,7 +6,9 @@ import {
   InvalidCredentialsError,
   InvalidDataError,
   NotFoundError,
+  StorageUnavailableError,
 } from '../model/errors.js';
+import type { Storage } from '../model/storage.js';
 import { adminRoutes } from './admin.js';
 import { authRoutes } from './auth.js';
 import { studentRoutes } from './students.js';
@@ -20,6 +22,8 @@ export interface AppDeps {
   email?: EmailSender;
   /** URL pública para enlaces en emails. Por defecto, APP_URL o localhost. */
   appUrl?: string;
+  /** Almacenamiento de archivos (miniaturas). Sin él, las subidas → 503. */
+  storage?: Storage;
 }
 
 const consoleEmail: EmailSender = {
@@ -33,6 +37,7 @@ export function createApp(appDeps: AppDeps) {
     transaction: appDeps.transaction,
     email: appDeps.email ?? consoleEmail,
     appUrl: appDeps.appUrl ?? process.env.APP_URL ?? 'http://localhost:3000',
+    storage: appDeps.storage ?? null,
   };
 
   const app = new Hono<AppEnv>();
@@ -45,6 +50,7 @@ export function createApp(appDeps: AppDeps) {
     if (err instanceof NotFoundError) return c.json({ error: err.message }, 404);
     if (err instanceof ConflictError) return c.json({ error: err.message }, 409);
     if (err instanceof EmailDeliveryError) return c.json({ error: err.message }, 502);
+    if (err instanceof StorageUnavailableError) return c.json({ error: err.message }, 503);
     console.error(err);
     return c.json({ error: 'Error interno' }, 500);
   });

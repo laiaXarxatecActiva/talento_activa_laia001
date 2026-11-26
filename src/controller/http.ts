@@ -2,6 +2,7 @@ import type { Context } from 'hono';
 import type { TransactionSql } from 'postgres';
 import type { EmailSender } from '../model/email.js';
 import type { Actor } from '../model/session.js';
+import type { Storage } from '../model/storage.js';
 
 // Réplica del tipo (no exportado) de `postgres` para `begin`/`savepoint`.
 type UnwrapPromiseArray<T> = T extends any[] ? { [k in keyof T]: T[k] extends Promise<infer R> ? R : T[k] } : T;
@@ -18,6 +19,21 @@ export interface Deps {
   email: EmailSender;
   /** URL pública de la app, para enlaces en emails. */
   appUrl: string;
+  /** Almacenamiento de archivos; `null` si no está configurado. */
+  storage: Storage | null;
+}
+
+/** Borra archivos de Storage sin romper la respuesta si falla (best-effort). */
+export async function removeFiles(storage: Storage | null, urls: Array<string | null>): Promise<void> {
+  if (!storage) return;
+  for (const url of urls) {
+    if (!url) continue;
+    try {
+      await storage.remove(url);
+    } catch (e) {
+      console.error('No se pudo borrar de Storage:', (e as Error).message);
+    }
+  }
 }
 
 /** Entorno de Hono: variables que el middleware deja en el contexto. */

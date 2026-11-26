@@ -114,7 +114,7 @@ En cada conexión, de forma autónoma:
 - [x] **T16 · Estado activo/inactivo:** el alumno (y el admin) cambian `estado`;
   un `inactivo` no es consultable por empresas. Tests de enforcement.
 - [x] **T17 · Derecho al olvido:** borrado en cascada de datos del alumno. Tests.
-- [ ] **T18 · Proyectos:** CRUD de `Project` vinculado al alumno; validar URL;
+- [x] **T18 · Proyectos:** CRUD de `Project` vinculado al alumno; validar URL;
   miniatura por subida manual. Tests.
 - [ ] **T19 · Skills e idiomas:** catálogo + asociación N:M con nivel
   (`Skill_student_rel`, `Language_student_rel`). Tests.

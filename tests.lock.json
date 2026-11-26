@@ -88,6 +88,18 @@
     "tests/controller/students-olvido.test.ts": {
       "sha256": "a1c7b036d7cfaa2dac9a8700dc7750e6cdbb0fcf0535d93f7328c1392563b1f4",
       "lockedAt": "2026-11-26T11:27:03.301Z"
+    },
+    "tests/model/validation.test.ts": {
+      "sha256": "970c22f0bf052ee3293700a7fb02d586a5fdb8cc249af6283f7615703badd40a",
+      "lockedAt": "2026-11-26T11:35:07.691Z"
+    },
+    "tests/model/storage.test.ts": {
+      "sha256": "c34035f75319c42860be456121dceb6189f8852e5c50cae0cd1c50c76a8fd1d3",
+      "lockedAt": "2026-11-26T11:35:07.691Z"
+    },
+    "tests/controller/students-projects.test.ts": {
+      "sha256": "4526c4de7c59b3e51a5d13e292594dcbe81877873febf630743147a65453484f",
+      "lockedAt": "2026-11-26T11:35:07.691Z"
     }
   }
 }

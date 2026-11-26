@@ -377,13 +377,19 @@ export async function setStudentEstado(
  *
  * @param actorId quien ejecuta el borrado; `null` si es el propio alumno (su
  *        usuario deja de existir y no puede figurar como autor).
+ * @returns URLs de miniaturas a borrar de Storage tras confirmar.
  */
-export async function forgetStudent(tx: TransactionSql, actorId: string | null, studentId: string): Promise<void> {
+export async function forgetStudent(
+  tx: TransactionSql,
+  actorId: string | null,
+  studentId: string,
+): Promise<string[]> {
   const [s] = await tx<{ id: string; user_id: string }[]>`
     select id, user_id from "Student" where id = ${studentId} for update`;
   if (!s) throw new NotFoundError();
 
-  const projects = await tx<{ id: string }[]>`select id from "Project" where student_id = ${s.id}`;
+  const projects = await tx<{ id: string; thumbnail_url: string | null }[]>`
+    select id, thumbnail_url from "Project" where student_id = ${s.id}`;
   const ids = [s.id, s.user_id, ...projects.map((p) => p.id)];
 
   // 1) Anonimizar la auditoría previa del alumno (sin datos personales).
@@ -409,4 +415,7 @@ export async function forgetStudent(tx: TransactionSql, actorId: string | null, 
       datosAnteriores: { motivo: 'derecho_al_olvido' },
     });
   }
+
+  // Miniaturas a borrar de Storage cuando la transacción termine.
+  return projects.flatMap((p) => (p.thumbnail_url ? [p.thumbnail_url] : []));
 }

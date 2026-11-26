@@ -46,3 +46,11 @@ export class EmailDeliveryError extends Error {
     this.name = 'EmailDeliveryError';
   }
 }
+
+/** Almacenamiento de archivos no configurado. El controlador → 503. */
+export class StorageUnavailableError extends Error {
+  constructor() {
+    super('Almacenamiento de archivos no configurado');
+    this.name = 'StorageUnavailableError';
+  }
+}

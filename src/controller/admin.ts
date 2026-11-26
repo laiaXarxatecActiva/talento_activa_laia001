@@ -4,7 +4,7 @@ import { closeEdition, createEdition, listEditions } from '../model/edition.js';
 import { ConflictError, InvalidDataError, NotFoundError } from '../model/errors.js';
 import { createStudentAccount, forgetStudent, listStudentsForAdmin, setStudentEstado } from '../model/student.js';
 import { getPublicUser } from '../model/user.js';
-import { isUuid, readJson, type AppEnv, type Deps } from './http.js';
+import { isUuid, readJson, removeFiles, type AppEnv, type Deps } from './http.js';
 import { sendInvitation } from './invitation.js';
 import { requireAuth } from './middleware.js';
 
@@ -85,7 +85,8 @@ export function adminRoutes(deps: Deps) {
     const id = c.req.param('id');
     if (!isUuid(id)) throw new NotFoundError();
     const actorId = c.var.actor.id;
-    await deps.transaction((tx) => forgetStudent(tx, actorId, id));
+    const thumbnails = await deps.transaction((tx) => forgetStudent(tx, actorId, id));
+    await removeFiles(deps.storage, thumbnails);
     return c.body(null, 204);
   });
 
