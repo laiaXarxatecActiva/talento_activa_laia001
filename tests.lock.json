@@ -64,6 +64,10 @@
     "tests/controller/auth-verify.test.ts": {
       "sha256": "cfbb53efc40dc35ea3fadf91923d0984913d2f7d10999abf6891ed23e7e5f265",
       "lockedAt": "2026-11-26T10:56:04.131Z"
+    },
+    "tests/controller/admin-editions.test.ts": {
+      "sha256": "b09eb838c14f4a601a94b34c1190cadee2b61f39aa9500e71cf8f833b20f87f6",
+      "lockedAt": "2026-11-26T10:59:39.150Z"
     }
   }
 }

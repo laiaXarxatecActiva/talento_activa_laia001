@@ -102,7 +102,7 @@ En cada conexión, de forma autónoma:
   bloquear acceso hasta verificar. Tests.
 
 ### Administración
-- [ ] **T12 · Ediciones:** CRUD de `Edition` (crear, cerrar). Tests.
+- [x] **T12 · Ediciones:** CRUD de `Edition` (crear, cerrar). Tests.
 - [ ] **T13 · Alta de alumnos finalizados:** crear `Student` (usuario ALUMNO) y
   asociar a una edición. Tests.
 - [ ] **T14 · Alta de empresas:** crear `Company` por invitación y marcar `es_socia`.
