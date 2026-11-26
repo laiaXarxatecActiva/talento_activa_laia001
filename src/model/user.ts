@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import type { TransactionSql } from 'postgres';
 import { writeAudit } from './audit.js';
 import { ConflictError, InvalidDataError } from './errors.js';
@@ -88,4 +89,54 @@ export async function getPublicUser(tx: TransactionSql, id: string): Promise<Pub
     select id, email, rol, email_verified, created_at from "User" where id = ${id}
   `;
   return user ?? null;
+}
+
+/** Roles que se pueden invitar desde la API (el staff ADMIN se da de alta aparte). */
+export const INVITABLE_ROLES = ['SOCIO', 'ALUMNO'] as const;
+export type InvitableRol = (typeof INVITABLE_ROLES)[number];
+
+/**
+ * Alta por invitación. La cuenta nace sin verificar y con una contraseña
+ * aleatoria que nadie conoce: el usuario fija la suya al verificar el email.
+ *
+ * @throws InvalidDataError si el rol no es invitable o el email no es válido.
+ * @throws ConflictError si el email ya existe.
+ */
+export async function inviteUser(
+  tx: TransactionSql,
+  actorId: string | null,
+  input: { email: string; rol: InvitableRol },
+): Promise<PublicUser> {
+  if (!(INVITABLE_ROLES as readonly string[]).includes(input.rol)) throw new InvalidDataError();
+  const unusablePassword = randomBytes(32).toString('base64url');
+  return createUser(tx, actorId, { email: input.email, password: unusablePassword, rol: input.rol });
+}
+
+/** Marca el email del usuario como verificado (auditado). Idempotente. */
+export async function markEmailVerified(tx: TransactionSql, actorId: string | null, userId: string): Promise<void> {
+  const [prev] = await tx<{ email_verified: boolean }[]>`
+    select email_verified from "User" where id = ${userId} for update
+  `;
+  if (!prev) throw new InvalidDataError();
+  if (prev.email_verified) return;
+
+  await tx`update "User" set email_verified = true where id = ${userId}`;
+  await writeAudit(tx, {
+    idUsuario: actorId,
+    tabla: 'User',
+    idRegistro: userId,
+    operacion: 'UPDATE',
+    datosAnteriores: { email_verified: false },
+    datosNuevos: { email_verified: true },
+  });
+}
+
+/**
+ * Alta del ADMIN inicial (staff), fuera de la API: ya verificado.
+ * Lo usa `scripts/create-admin.ts`.
+ */
+export async function createInitialAdmin(tx: TransactionSql, email: string, password: string): Promise<PublicUser> {
+  const admin = await createUser(tx, null, { email, password, rol: 'ADMIN' });
+  await markEmailVerified(tx, null, admin.id);
+  return { ...admin, email_verified: true };
 }

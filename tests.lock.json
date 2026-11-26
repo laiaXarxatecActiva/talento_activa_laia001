@@ -44,6 +44,14 @@
     "tests/controller/middleware.test.ts": {
       "sha256": "2d44301d04b5f3af2fcb5dcc61e24c6b3a102a4c27a74b45a624ba171707f3d5",
       "lockedAt": "2026-11-26T10:48:00.321Z"
+    },
+    "tests/controller/auth-register.test.ts": {
+      "sha256": "4519f7f96c8aa449a5574d3cd477cba54b201417aefd6e1c29e12fb90736f229",
+      "lockedAt": "2026-11-26T10:51:04.658Z"
+    },
+    "tests/model/admin-bootstrap.test.ts": {
+      "sha256": "1cc1b87769d96517b8763f8aa1d213b4a32aae6798f90ee55e7a83ed81beb595",
+      "lockedAt": "2026-11-26T10:51:04.658Z"
     }
   }
 }

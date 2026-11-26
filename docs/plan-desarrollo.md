@@ -96,7 +96,7 @@ En cada conexión, de forma autónoma:
   y `GET /api/me` (proyección pública sin hash). Tests.
 - [x] **T09 · Middleware de autorización:** resuelve sesión y exige rol por ruta.
   Tests de acceso por rol.
-- [ ] **T10 · Registro restringido:** `POST /api/auth/register` solo ADMIN (alta por
+- [x] **T10 · Registro restringido:** `POST /api/auth/register` solo ADMIN (alta por
   invitación). Tests.
 - [ ] **T11 · Verificación de email:** token de un solo uso con caducidad + envío;
   bloquear acceso hasta verificar. Tests.
