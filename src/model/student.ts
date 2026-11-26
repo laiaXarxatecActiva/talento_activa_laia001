@@ -366,3 +366,47 @@ export async function setStudentEstado(
   });
   return { ...current, estado };
 }
+
+/**
+ * Derecho al olvido: borra al alumno del sistema. Al borrar su `User` se
+ * eliminan en cascada su ficha, proyectos, skills, idiomas, bookmarks,
+ * Reminder_state, sesiones y tokens.
+ *
+ * `Audit_log` conserva la traza (qué registro y qué operación) pero se
+ * eliminan los datos personales de las entradas previas del alumno.
+ *
+ * @param actorId quien ejecuta el borrado; `null` si es el propio alumno (su
+ *        usuario deja de existir y no puede figurar como autor).
+ */
+export async function forgetStudent(tx: TransactionSql, actorId: string | null, studentId: string): Promise<void> {
+  const [s] = await tx<{ id: string; user_id: string }[]>`
+    select id, user_id from "Student" where id = ${studentId} for update`;
+  if (!s) throw new NotFoundError();
+
+  const projects = await tx<{ id: string }[]>`select id from "Project" where student_id = ${s.id}`;
+  const ids = [s.id, s.user_id, ...projects.map((p) => p.id)];
+
+  // 1) Anonimizar la auditoría previa del alumno (sin datos personales).
+  await tx`
+    update "Audit_log" set datos_anteriores = null, datos_nuevos = null
+    where id_registro in ${tx(ids)}
+       or datos_anteriores ->> 'user_id' = ${s.user_id} or datos_nuevos ->> 'user_id' = ${s.user_id}
+       or datos_anteriores ->> 'student_id' = ${s.id} or datos_nuevos ->> 'student_id' = ${s.id}`;
+
+  // 2) Borrado en cascada.
+  await tx`delete from "User" where id = ${s.user_id}`;
+
+  // 3) Dejar constancia del borrado, sin datos personales.
+  for (const [tabla, idRegistro] of [
+    ['Student', s.id],
+    ['User', s.user_id],
+  ] as const) {
+    await writeAudit(tx, {
+      idUsuario: actorId,
+      tabla,
+      idRegistro,
+      operacion: 'DELETE',
+      datosAnteriores: { motivo: 'derecho_al_olvido' },
+    });
+  }
+}

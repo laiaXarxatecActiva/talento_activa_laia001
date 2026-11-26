@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { createCompany, inviteCompanyUser, listCompanies, setCompanySocia } from '../model/company.js';
 import { closeEdition, createEdition, listEditions } from '../model/edition.js';
 import { ConflictError, InvalidDataError, NotFoundError } from '../model/errors.js';
-import { createStudentAccount, listStudentsForAdmin, setStudentEstado } from '../model/student.js';
+import { createStudentAccount, forgetStudent, listStudentsForAdmin, setStudentEstado } from '../model/student.js';
 import { getPublicUser } from '../model/user.js';
 import { isUuid, readJson, type AppEnv, type Deps } from './http.js';
 import { sendInvitation } from './invitation.js';
@@ -78,6 +78,15 @@ export function adminRoutes(deps: Deps) {
     const actorId = c.var.actor.id;
     const student = await deps.transaction((tx) => setStudentEstado(tx, actorId, id, body.estado));
     return c.json({ student }, 200);
+  });
+
+  // Derecho al olvido ejecutado por un admin.
+  r.delete('/students/:id', async (c) => {
+    const id = c.req.param('id');
+    if (!isUuid(id)) throw new NotFoundError();
+    const actorId = c.var.actor.id;
+    await deps.transaction((tx) => forgetStudent(tx, actorId, id));
+    return c.body(null, 204);
   });
 
   // --- Empresas ------------------------------------------------------------

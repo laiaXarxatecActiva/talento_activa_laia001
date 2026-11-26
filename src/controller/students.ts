@@ -1,6 +1,13 @@
 import { Hono } from 'hono';
 import { NotFoundError, InvalidDataError } from '../model/errors.js';
-import { getStudentFichaByUser, getStudentForViewer, setStudentEstado, updateOwnStudent } from '../model/student.js';
+import {
+  forgetStudent,
+  getStudentFichaByUser,
+  getStudentForViewer,
+  setStudentEstado,
+  updateOwnStudent,
+} from '../model/student.js';
+import { buildClearSessionCookie } from './cookie.js';
 import { isUuid, readJson, type AppEnv, type Deps } from './http.js';
 import { requireAuth } from './middleware.js';
 
@@ -34,6 +41,18 @@ export function studentRoutes(deps: Deps) {
       return setStudentEstado(tx, userId, own.id, body.estado);
     });
     return c.json({ student }, 200);
+  });
+
+  // Derecho al olvido ejercido por el propio alumno.
+  r.delete('/me', requireAuth(deps, 'ALUMNO'), async (c) => {
+    const userId = c.var.actor.id;
+    await deps.transaction(async (tx) => {
+      const own = await getStudentFichaByUser(tx, userId);
+      if (!own) throw new NotFoundError();
+      await forgetStudent(tx, null, own.id);
+    });
+    c.header('Set-Cookie', buildClearSessionCookie());
+    return c.body(null, 204);
   });
 
   // --- Ficha por id (según quién mira) ---------------------------------------
