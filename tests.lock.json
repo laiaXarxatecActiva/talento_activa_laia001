@@ -4,6 +4,10 @@
     "tests/model/db.test.ts": {
       "sha256": "cc7dce491d4917acb4cc09e95323116805109f599b65d027ddca66527058b4a0",
       "lockedAt": "2026-11-26T09:34:48.323Z"
+    },
+    "tests/model/audit.test.ts": {
+      "sha256": "5bf9453291d23d6cd921de54fb27b6fa7554d2e67ab7a785017f34d8e928cc2d",
+      "lockedAt": "2026-11-26T10:16:37.895Z"
     }
   }
 }
