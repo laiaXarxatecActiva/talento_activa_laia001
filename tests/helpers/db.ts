@@ -107,3 +107,26 @@ export function call(
     }),
   );
 }
+
+/**
+ * Crea una edición y un ALUMNO verificado con ficha Student y sesión.
+ * `estado`/`consent` permiten dejarlo ya publicado (activo + consentimiento).
+ */
+export async function alumnoConFicha(
+  tx: TransactionSql,
+  opts: { nombre?: string; publicado?: boolean; privacy?: Record<string, boolean>; extra?: Record<string, unknown> } = {},
+): Promise<{ user: PublicUser; cookie: string; studentId: string; editionId: string }> {
+  const { user, cookie } = await loginAs(tx, 'ALUMNO');
+  const [edition] = await tx<{ id: string }[]>`
+    insert into "Edition" (nombre, anio) values (${`Edición ${user.email}`}, 2026) returning id`;
+  const [student] = await tx<{ id: string }[]>`
+    insert into "Student" (user_id, edition_id, nombre, estado, consent_at, privacy)
+    values (${user.id}, ${edition!.id}, ${opts.nombre ?? 'Alumna Test'},
+            ${opts.publicado ? 'activo' : 'inactivo'}, ${opts.publicado ? new Date() : null},
+            ${tx.json(opts.privacy ?? {})})
+    returning id`;
+  if (opts.extra && Object.keys(opts.extra).length > 0) {
+    await tx`update "Student" set ${tx(opts.extra as Record<string, string>)} where id = ${student!.id}`;
+  }
+  return { user, cookie, studentId: student!.id, editionId: edition!.id };
+}

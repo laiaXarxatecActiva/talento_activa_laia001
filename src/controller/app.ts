@@ -9,6 +9,7 @@ import {
 } from '../model/errors.js';
 import { adminRoutes } from './admin.js';
 import { authRoutes } from './auth.js';
+import { studentRoutes } from './students.js';
 import type { AppEnv, Deps, Transaction } from './http.js';
 
 export type { Transaction } from './http.js';
@@ -50,6 +51,7 @@ export function createApp(appDeps: AppDeps) {
 
   app.route('/api', authRoutes(deps));
   app.route('/api/admin', adminRoutes(deps));
+  app.route('/api/students', studentRoutes(deps));
 
   return app;
 }

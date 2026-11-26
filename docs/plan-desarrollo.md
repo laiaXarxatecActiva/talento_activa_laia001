@@ -109,7 +109,7 @@ En cada conexión, de forma autónoma:
   Tests.
 
 ### Alumno
-- [ ] **T15 · Ficha de alumno:** modelo `Student` + endpoints de lectura/edición de
+- [x] **T15 · Ficha de alumno:** modelo `Student` + endpoints de lectura/edición de
   su ficha; `privacy` por campo. Tests.
 - [ ] **T16 · Estado activo/inactivo:** el alumno (y el admin) cambian `estado`;
   un `inactivo` no es consultable por empresas. Tests de enforcement.
