@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
+import { LANGUAGES, replaceStudentItems, SKILLS } from '../model/catalog.js';
 import { NotFoundError, InvalidDataError, StorageUnavailableError } from '../model/errors.js';
 import {
   assertOwnProject,
@@ -126,6 +127,17 @@ export function studentRoutes(deps: Deps) {
       return c.json({ project }, 200);
     },
   );
+
+  // --- Skills e idiomas propios (sustituye el conjunto) -----------------------
+  for (const cfg of [SKILLS, LANGUAGES]) {
+    r.put(`/me/${cfg.listKey}`, requireAuth(deps, 'ALUMNO'), async (c) => {
+      const body = await readJson(c);
+      if (!body) throw new InvalidDataError();
+      const userId = c.var.actor.id;
+      const items = await deps.transaction((tx) => replaceStudentItems(tx, cfg, userId, body));
+      return c.json({ [cfg.listKey]: items }, 200);
+    });
+  }
 
   // --- Ficha por id (según quién mira) ---------------------------------------
   r.get('/:id', requireAuth(deps), async (c) => {

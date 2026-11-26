@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { addCatalogEntry, LANGUAGES, SKILLS } from '../model/catalog.js';
 import { createCompany, inviteCompanyUser, listCompanies, setCompanySocia } from '../model/company.js';
 import { closeEdition, createEdition, listEditions } from '../model/edition.js';
 import { ConflictError, InvalidDataError, NotFoundError } from '../model/errors.js';
@@ -132,6 +133,20 @@ export function adminRoutes(deps: Deps) {
     });
     return c.json({ company }, 201);
   });
+
+  // --- Catálogos -----------------------------------------------------------
+  for (const [path, cfg, key] of [
+    ['/skills', SKILLS, 'skill'],
+    ['/languages', LANGUAGES, 'language'],
+  ] as const) {
+    r.post(path, async (c) => {
+      const body = await readJson(c);
+      if (!body) throw new InvalidDataError();
+      const actorId = c.var.actor.id;
+      const entry = await deps.transaction((tx) => addCatalogEntry(tx, cfg, actorId, body.nombre));
+      return c.json({ [key]: entry }, 201);
+    });
+  }
 
   return r;
 }

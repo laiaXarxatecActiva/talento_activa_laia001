@@ -100,6 +100,10 @@
     "tests/controller/students-projects.test.ts": {
       "sha256": "4526c4de7c59b3e51a5d13e292594dcbe81877873febf630743147a65453484f",
       "lockedAt": "2026-11-26T11:35:07.691Z"
+    },
+    "tests/controller/skills-languages.test.ts": {
+      "sha256": "e4837d98fda4057f923e81b55827b47dae2d6c2c788da75906d03a535761cf6c",
+      "lockedAt": "2026-11-26T11:42:01.867Z"
     }
   }
 }

@@ -116,7 +116,7 @@ En cada conexión, de forma autónoma:
 - [x] **T17 · Derecho al olvido:** borrado en cascada de datos del alumno. Tests.
 - [x] **T18 · Proyectos:** CRUD de `Project` vinculado al alumno; validar URL;
   miniatura por subida manual. Tests.
-- [ ] **T19 · Skills e idiomas:** catálogo + asociación N:M con nivel
+- [x] **T19 · Skills e idiomas:** catálogo + asociación N:M con nivel
   (`Skill_student_rel`, `Language_student_rel`). Tests.
 
 > Fases 2 (escaparate/empresas), 3 (automatizaciones/emails) y 4 (chatbot) se
