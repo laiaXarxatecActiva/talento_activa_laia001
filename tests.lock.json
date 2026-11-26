@@ -8,6 +8,10 @@
     "tests/model/audit.test.ts": {
       "sha256": "5bf9453291d23d6cd921de54fb27b6fa7554d2e67ab7a785017f34d8e928cc2d",
       "lockedAt": "2026-11-26T10:16:37.895Z"
+    },
+    "tests/model/password.test.ts": {
+      "sha256": "2cbdae572022d0ae04075e3047a658132ec7d033f9d624dfe78b6c744ea2483f",
+      "lockedAt": "2026-11-26T10:18:44.096Z"
     }
   }
 }

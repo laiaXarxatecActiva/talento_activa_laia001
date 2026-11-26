@@ -80,7 +80,7 @@ En cada conexión, de forma autónoma:
   de aplicación (nunca hash ni token). Test de inserción y de exclusiones.
 
 ### Autenticación
-- [ ] **T03 · Hashing de contraseñas:** Argon2id `m=19456,t=2,p=1`; validación de
+- [x] **T03 · Hashing de contraseñas:** Argon2id `m=19456,t=2,p=1`; validación de
   longitud 12–256 → error de datos no válidos. Tests de hash/verify y límites.
 - [ ] **T04 · Modelo User:** alta por invitación (rol, `email_verified=false`),
   email único sobre `lower(email)`. Tests.
