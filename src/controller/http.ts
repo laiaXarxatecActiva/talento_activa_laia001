@@ -37,9 +37,5 @@ export async function readJson(c: Context): Promise<Record<string, unknown> | nu
   }
 }
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 /** ¿Es un UUID? (para rechazar ids de ruta mal formados con 404). */
-export function isUuid(s: string): boolean {
-  return UUID_RE.test(s);
-}
+export { isUuid } from '../model/validation.js';

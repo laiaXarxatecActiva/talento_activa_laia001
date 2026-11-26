@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { closeEdition, createEdition, listEditions } from '../model/edition.js';
 import { ConflictError, InvalidDataError, NotFoundError } from '../model/errors.js';
+import { createStudentAccount, listStudentsForAdmin } from '../model/student.js';
 import { getPublicUser } from '../model/user.js';
 import { isUuid, readJson, type AppEnv, type Deps } from './http.js';
 import { sendInvitation } from './invitation.js';
@@ -45,6 +46,27 @@ export function adminRoutes(deps: Deps) {
     const actorId = c.var.actor.id;
     const edition = await deps.transaction((tx) => closeEdition(tx, actorId, id));
     return c.json({ edition }, 200);
+  });
+
+  // --- Alumnos -------------------------------------------------------------
+  r.get('/students', async (c) => {
+    const editionId = c.req.query('edition_id');
+    if (editionId !== undefined && !isUuid(editionId)) throw new InvalidDataError();
+    const students = await deps.transaction((tx) => listStudentsForAdmin(tx, { editionId }));
+    return c.json({ students }, 200);
+  });
+
+  // Alta de alumno finalizado + invitación (todo o nada).
+  r.post('/students', async (c) => {
+    const body = await readJson(c);
+    if (!body) throw new InvalidDataError();
+    const actorId = c.var.actor.id;
+    const student = await deps.transaction(async (tx) => {
+      const created = await createStudentAccount(tx, actorId, body);
+      await sendInvitation(tx, deps, { id: created.user_id, email: created.email }, actorId);
+      return created;
+    });
+    return c.json({ student }, 201);
   });
 
   return r;

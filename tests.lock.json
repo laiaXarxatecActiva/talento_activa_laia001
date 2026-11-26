@@ -68,6 +68,10 @@
     "tests/controller/admin-editions.test.ts": {
       "sha256": "b09eb838c14f4a601a94b34c1190cadee2b61f39aa9500e71cf8f833b20f87f6",
       "lockedAt": "2026-11-26T10:59:39.150Z"
+    },
+    "tests/controller/admin-students.test.ts": {
+      "sha256": "808f1c0857005facff5f3791c10666671d12029788fcf9bead8a93a7bdbcbdf1",
+      "lockedAt": "2026-11-26T11:03:39.708Z"
     }
   }
 }
