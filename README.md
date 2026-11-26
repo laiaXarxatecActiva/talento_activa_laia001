@@ -50,7 +50,8 @@ Opcional:
 Todas las rutas van bajo `/api`, aceptan y devuelven JSON. La sesión viaja
 **solo** en la cookie `sesion` (HttpOnly). Errores: `{"error": "mensaje"}` con
 400 (datos no válidos), 401 (sin sesión / credenciales), 403 (rol o email sin
-verificar), 404, 409 (conflicto), 502 (email), 503 (storage).
+verificar), 404, 409 (conflicto), 413 (JSON > 64 KB), 429 (demasiados intentos de
+login/verificación), 502 (email), 503 (storage).
 
 ### Autenticación
 
@@ -59,7 +60,7 @@ verificar), 404, 409 (conflicto), 502 (email), 503 (storage).
 | POST | `/auth/login` | público | `{email, password}` → cookie + `{user}` |
 | POST | `/auth/logout` | cualquiera | Borra la sesión, limpia la cookie (204) |
 | GET | `/me` | con sesión | Usuario actual |
-| POST | `/auth/register` | ADMIN | `{email, rol: SOCIO\|ALUMNO}` + invitación |
+| POST | `/auth/register` | ADMIN | SOCIO: `{email, rol, company_id}` · ALUMNO: `{email, rol, edition_id, nombre}` + invitación |
 | POST | `/auth/verify` | público | `{token, password}` |
 
 ### Administración (solo ADMIN)

@@ -119,5 +119,11 @@ En cada conexión, de forma autónoma:
 - [x] **T19 · Skills e idiomas:** catálogo + asociación N:M con nivel
   (`Skill_student_rel`, `Language_student_rel`). Tests.
 
+### Pendiente de definición
+- [ ] **T20 · Dashboard de métricas (ADMIN):** alumnos activos/inactivos, % de
+  inserción, perfiles más vistos (spec §4, Fase 1). **Bloqueada:** la spec lo marca
+  como "[Pendiente] Detalle del dashboard"; requiere que el responsable defina
+  métricas y fuentes (p. ej. "más vistos" exige registrar visitas) o lo mueva de fase.
+
 > Fases 2 (escaparate/empresas), 3 (automatizaciones/emails) y 4 (chatbot) se
 > detallarán cuando la Fase 1 esté cerrada y revisada.

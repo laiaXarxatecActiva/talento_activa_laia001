@@ -1,6 +1,8 @@
+import { randomBytes } from 'node:crypto';
 import type { TransactionSql } from 'postgres';
 import { writeAudit } from './audit.js';
 import { InvalidDataError, NotFoundError } from './errors.js';
+import { detectImageType, IMAGE_EXTENSIONS, type ImageType } from './storage.js';
 import type { ProjectItem } from './student.js';
 import { httpUrl, optionalText, requiredText } from './validation.js';
 
@@ -131,4 +133,18 @@ export async function setProjectThumbnail(
     datosNuevos: { student_id: current.student_id, thumbnail_url: thumbnailUrl },
   });
   return { project: strip({ ...current, thumbnail_url: thumbnailUrl }), previous: current.thumbnail_url };
+}
+
+/** Tamaño máximo de una miniatura (subida manual). */
+export const MAX_THUMBNAIL_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Reglas de negocio de la miniatura: PNG/JPEG/WebP (por magic bytes, sin fiarse
+ * de la cabecera), no vacía y ≤ 2 MB. Devuelve el tipo y una ruta única.
+ * @throws InvalidDataError si no cumple.
+ */
+export function prepareThumbnail(bytes: Uint8Array, projectId: string): { type: ImageType; path: string } {
+  const type = detectImageType(bytes);
+  if (!type || bytes.byteLength > MAX_THUMBNAIL_BYTES) throw new InvalidDataError();
+  return { type, path: `thumbnails/${projectId}-${randomBytes(8).toString('base64url')}.${IMAGE_EXTENSIONS[type]}` };
 }

@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { LANGUAGES, replaceStudentItems, SKILLS } from '../model/catalog.js';
@@ -8,10 +7,11 @@ import {
   createOwnProject,
   deleteOwnProject,
   listOwnProjects,
+  MAX_THUMBNAIL_BYTES,
+  prepareThumbnail,
   setProjectThumbnail,
   updateOwnProject,
 } from '../model/project.js';
-import { detectImageType, IMAGE_EXTENSIONS } from '../model/storage.js';
 import {
   forgetStudent,
   getStudentFichaByUser,
@@ -22,8 +22,6 @@ import {
 import { buildClearSessionCookie } from './cookie.js';
 import { isUuid, readJson, removeFiles, type AppEnv, type Deps } from './http.js';
 import { requireAuth } from './middleware.js';
-
-const MAX_THUMBNAIL_BYTES = 2 * 1024 * 1024;
 
 /** Rutas de alumnos: /api/students/*. */
 export function studentRoutes(deps: Deps) {
@@ -65,7 +63,7 @@ export function studentRoutes(deps: Deps) {
       if (!own) throw new NotFoundError();
       return forgetStudent(tx, null, own.id);
     });
-    await removeFiles(deps.storage, thumbnails);
+    await removeFiles(deps, thumbnails);
     c.header('Set-Cookie', buildClearSessionCookie());
     return c.body(null, 204);
   });
@@ -100,7 +98,7 @@ export function studentRoutes(deps: Deps) {
     if (!isUuid(pid)) throw new NotFoundError();
     const userId = c.var.actor.id;
     const thumbnail = await deps.transaction((tx) => deleteOwnProject(tx, userId, pid));
-    await removeFiles(deps.storage, [thumbnail]);
+    await removeFiles(deps, [thumbnail]);
     return c.body(null, 204);
   });
 
@@ -114,16 +112,22 @@ export function studentRoutes(deps: Deps) {
       if (!isUuid(pid)) throw new NotFoundError();
       const userId = c.var.actor.id;
       const bytes = new Uint8Array(await c.req.arrayBuffer());
-      const type = detectImageType(bytes);
-      if (!type || bytes.byteLength > MAX_THUMBNAIL_BYTES) throw new InvalidDataError();
+      const { type, path } = prepareThumbnail(bytes, pid);
 
       await deps.transaction((tx) => assertOwnProject(tx, userId, pid));
       if (!deps.storage) throw new StorageUnavailableError();
-      const path = `thumbnails/${pid}-${randomBytes(8).toString('base64url')}.${IMAGE_EXTENSIONS[type]}`;
       const url = await deps.storage.upload(path, bytes, type);
 
-      const { project, previous } = await deps.transaction((tx) => setProjectThumbnail(tx, userId, pid, url));
-      await removeFiles(deps.storage, [previous]);
+      let result;
+      try {
+        result = await deps.transaction((tx) => setProjectThumbnail(tx, userId, pid, url));
+      } catch (e) {
+        // No dejar el fichero recién subido huérfano en el bucket.
+        await removeFiles(deps, [url]);
+        throw e;
+      }
+      const { project, previous } = result;
+      await removeFiles(deps, [previous]);
       return c.json({ project }, 200);
     },
   );

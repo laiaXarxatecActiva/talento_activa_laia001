@@ -9,6 +9,8 @@ import {
   StorageUnavailableError,
 } from '../model/errors.js';
 import type { Storage } from '../model/storage.js';
+import { bodyLimit } from 'hono/body-limit';
+import { createLimiters, DEFAULT_RATE_LIMIT, type RateLimitConfig } from './rate-limit.js';
 import { adminRoutes } from './admin.js';
 import { authRoutes } from './auth.js';
 import { catalogRoutes } from './catalog.js';
@@ -25,7 +27,12 @@ export interface AppDeps {
   appUrl?: string;
   /** Almacenamiento de archivos (miniaturas). Sin él, las subidas → 503. */
   storage?: Storage;
+  /** Límites de intentos de login/verify. */
+  rateLimit?: RateLimitConfig;
 }
+
+/** Tamaño máximo de un cuerpo JSON (las miniaturas tienen su propio límite). */
+const MAX_JSON_BYTES = 64 * 1024;
 
 const consoleEmail: EmailSender = {
   async send(m: EmailMessage) {
@@ -39,6 +46,7 @@ export function createApp(appDeps: AppDeps) {
     email: appDeps.email ?? consoleEmail,
     appUrl: appDeps.appUrl ?? process.env.APP_URL ?? 'http://localhost:3000',
     storage: appDeps.storage ?? null,
+    limiters: createLimiters(appDeps.rateLimit ?? DEFAULT_RATE_LIMIT),
   };
 
   const app = new Hono<AppEnv>();
@@ -54,6 +62,16 @@ export function createApp(appDeps: AppDeps) {
     if (err instanceof StorageUnavailableError) return c.json({ error: err.message }, 503);
     console.error(err);
     return c.json({ error: 'Error interno' }, 500);
+  });
+
+  // Límite de tamaño para todo lo que no sea una subida de miniatura.
+  const jsonLimit = bodyLimit({
+    maxSize: MAX_JSON_BYTES,
+    onError: (c) => c.json({ error: 'Petición demasiado grande' }, 413),
+  });
+  app.use('/api/*', async (c, next) => {
+    if (c.req.path.endsWith('/thumbnail')) return next();
+    return jsonLimit(c, next);
   });
 
   app.route('/api', authRoutes(deps));

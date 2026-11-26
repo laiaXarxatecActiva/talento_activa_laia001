@@ -161,7 +161,11 @@ type StudentRow = Omit<StudentFicha, 'edition' | 'skills' | 'languages' | 'proje
   edition_anio: number;
 };
 
-async function loadFicha(tx: TransactionSql, where: ReturnType<TransactionSql>): Promise<StudentFicha | null> {
+async function loadFicha(
+  tx: TransactionSql,
+  where: ReturnType<TransactionSql>,
+  forUpdate = false,
+): Promise<StudentFicha | null> {
   const [row] = await tx<StudentRow[]>`
     select s.id, s.user_id, u.email, s.nombre,
            e.id as edition_id, e.nombre as edition_nombre, e.anio as edition_anio,
@@ -171,6 +175,7 @@ async function loadFicha(tx: TransactionSql, where: ReturnType<TransactionSql>):
     join "User" u on u.id = s.user_id
     join "Edition" e on e.id = s.edition_id
     ${where}
+    ${forUpdate ? tx`for update of s` : tx``}
   `;
   if (!row) return null;
   const { edition_id, edition_nombre, edition_anio, ...rest } = row;
@@ -194,12 +199,17 @@ async function loadFicha(tx: TransactionSql, where: ReturnType<TransactionSql>):
   };
 }
 
-export function getStudentFicha(tx: TransactionSql, id: string): Promise<StudentFicha | null> {
-  return loadFicha(tx, tx`where s.id = ${id}`);
+/** Ficha por id. Con `forUpdate`, bloquea la fila hasta el fin de la transacción. */
+export function getStudentFicha(tx: TransactionSql, id: string, opts: { forUpdate?: boolean } = {}): Promise<StudentFicha | null> {
+  return loadFicha(tx, tx`where s.id = ${id}`, opts.forUpdate);
 }
 
-export function getStudentFichaByUser(tx: TransactionSql, userId: string): Promise<StudentFicha | null> {
-  return loadFicha(tx, tx`where s.user_id = ${userId}`);
+export function getStudentFichaByUser(
+  tx: TransactionSql,
+  userId: string,
+  opts: { forUpdate?: boolean } = {},
+): Promise<StudentFicha | null> {
+  return loadFicha(tx, tx`where s.user_id = ${userId}`, opts.forUpdate);
 }
 
 /** ¿Lo puede consultar una empresa? Solo activo y con consentimiento. */
@@ -286,7 +296,7 @@ export async function updateOwnStudent(
   input: Record<string, unknown>,
   now: Date = new Date(),
 ): Promise<StudentFicha> {
-  const current = await getStudentFichaByUser(tx, actorId);
+  const current = await getStudentFichaByUser(tx, actorId, { forUpdate: true });
   if (!current) throw new NotFoundError();
 
   // 1) Validar TODO antes de tocar nada.
@@ -304,8 +314,6 @@ export async function updateOwnStudent(
       }
     } else throw new InvalidDataError();
   }
-  if (current.filled_at === null && Object.keys(input).length > 0) next.filled_at = now;
-
   // 2) Quedarse con lo que realmente cambia.
   const antes: Record<string, unknown> = {};
   const despues: Record<string, unknown> = {};
@@ -315,6 +323,13 @@ export async function updateOwnStudent(
       antes[key] = prev;
       despues[key] = value;
     }
+  }
+  // "Ficha rellenada" (detiene los recordatorios de la Fase 3) solo si cambia
+  // de verdad algún dato; privacidad o consentimiento no cuentan.
+  const cambiaDato = Object.keys(despues).some((k) => k in EDITABLE_VALIDATORS);
+  if (current.filled_at === null && cambiaDato) {
+    antes.filled_at = null;
+    despues.filled_at = now;
   }
   if (Object.keys(despues).length === 0) return current;
 
@@ -348,7 +363,7 @@ export async function setStudentEstado(
 ): Promise<StudentFicha> {
   const estado = optionalEnum(estadoInput, STUDENT_ESTADOS);
   if (estado === null) throw new InvalidDataError();
-  const current = await getStudentFicha(tx, studentId);
+  const current = await getStudentFicha(tx, studentId, { forUpdate: true });
   if (!current) throw new NotFoundError();
   if (estado === 'activo' && current.consent_at === null) {
     throw new ConflictError('Para activar el perfil hace falta el consentimiento del alumno');

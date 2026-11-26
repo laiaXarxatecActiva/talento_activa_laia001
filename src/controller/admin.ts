@@ -87,7 +87,7 @@ export function adminRoutes(deps: Deps) {
     if (!isUuid(id)) throw new NotFoundError();
     const actorId = c.var.actor.id;
     const thumbnails = await deps.transaction((tx) => forgetStudent(tx, actorId, id));
-    await removeFiles(deps.storage, thumbnails);
+    await removeFiles(deps, thumbnails);
     return c.body(null, 204);
   });
 

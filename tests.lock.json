@@ -108,6 +108,30 @@
     "tests/helpers/db.ts": {
       "sha256": "5eaae39867c82ee461e5b8fc3f488c2f3cdfad5027b9832afd506236296ce34e",
       "lockedAt": "2026-11-26T12:28:41.995Z"
+    },
+    "tests/controller/rate-limit.test.ts": {
+      "sha256": "0b0a30b4c375c062429344182e569137472cb072c208d0d2d628c0c23c70677f",
+      "lockedAt": "2026-11-26T12:38:38.726Z"
+    },
+    "tests/controller/students-filled.test.ts": {
+      "sha256": "1f4e574e6e1a6e851deae6290cc3bfb4c1aab9e7fae44293391788a961d41998",
+      "lockedAt": "2026-11-26T12:38:38.727Z"
+    },
+    "tests/model/thumbnail.test.ts": {
+      "sha256": "ea0ee88573d7076f16cadf7d860e04052db2cb771b10b5f4e3b21ec44c8ea431",
+      "lockedAt": "2026-11-26T12:38:38.727Z"
+    },
+    "tests/controller/storage-cleanup.test.ts": {
+      "sha256": "866a18285cbcc64c7b1fc8a90f39a110ce4efd2015b491550869c5bb88c440a4",
+      "lockedAt": "2026-11-26T12:38:38.727Z"
+    },
+    "tests/controller/company-audit.test.ts": {
+      "sha256": "b4ead9d13a8b50c025223bd6802170756ef452e545df136a743d0835cd81073b",
+      "lockedAt": "2026-11-26T12:38:38.727Z"
+    },
+    "tests/model/student-locking.test.ts": {
+      "sha256": "86bf6ab90f9fd51c5071e0f524b39fab145470332e4235084690cf8c781701a2",
+      "lockedAt": "2026-11-26T12:38:38.727Z"
     }
   }
 }

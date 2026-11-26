@@ -38,7 +38,8 @@ async function addCompanyUser(tx: TransactionSql, actorId: string, companyId: st
   await writeAudit(tx, {
     idUsuario: actorId,
     tabla: 'Company_user_rel',
-    idRegistro: companyId,
+    // Tabla puente: id_registro = el usuario vinculado (único por fila).
+    idRegistro: user.id,
     operacion: 'INSERT',
     datosNuevos: { company_id: companyId, user_id: user.id },
   });
