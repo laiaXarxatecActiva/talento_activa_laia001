@@ -2,7 +2,8 @@ import { Hono } from 'hono';
 import { login } from '../model/auth.js';
 import { isValidPasswordLength } from '../model/password.js';
 import { deleteSession } from '../model/session.js';
-import { getPublicUser, inviteUser, type InvitableRol } from '../model/user.js';
+import { registerInvitedAccount } from '../model/registration.js';
+import { getPublicUser } from '../model/user.js';
 import { consumeVerificationToken } from '../model/verification.js';
 import { buildClearSessionCookie, buildSessionCookie, readSessionToken } from './cookie.js';
 import { readJson, type AppEnv, type Deps } from './http.js';
@@ -35,16 +36,15 @@ export function authRoutes(deps: Deps) {
     return c.body(null, 204);
   });
 
-  // Alta por invitación: solo ADMIN. No crea ADMIN (el staff va aparte).
+  // Alta por invitación: solo ADMIN. SOCIO con empresa, ALUMNO con ficha y
+  // edición; nunca ADMIN (el staff va aparte).
   r.post('/auth/register', requireAuth(deps, 'ADMIN'), async (c) => {
     const body = await readJson(c);
-    const email = body?.email;
-    const rol = body?.rol;
-    if (typeof email !== 'string' || typeof rol !== 'string') return c.json({ error: 'Datos no válidos' }, 400);
+    if (!body) return c.json({ error: 'Datos no válidos' }, 400);
 
     const actorId = c.var.actor.id;
     const user = await deps.transaction(async (tx) => {
-      const created = await inviteUser(tx, actorId, { email, rol: rol as InvitableRol });
+      const created = await registerInvitedAccount(tx, actorId, body);
       await sendInvitation(tx, deps, created, actorId);
       return created;
     });

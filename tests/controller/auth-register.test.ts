@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { hasDb, withApp, appSinBd, loginAs, call } from '../helpers/db.js';
+import { hasDb, withApp, appSinBd, loginAs, call, registerBody, nuevaEmpresa, nuevaEdicion } from '../helpers/db.js';
 
 describe('POST /api/auth/register — acceso', () => {
   it('sin sesión → 401', async () => {
@@ -29,7 +29,7 @@ describe('POST /api/auth/register — como ADMIN (integración Supabase)', () =>
       const { cookie } = await loginAs(tx, 'ADMIN');
       const res = await call(app, 'POST', '/api/auth/register', {
         cookie,
-        body: { email: 'Invitado@Example.com', rol: 'SOCIO' },
+        body: await registerBody(tx, 'SOCIO', 'Invitado@Example.com'),
       });
       expect(res.status).toBe(201);
       const body = (await res.json()) as { user: Record<string, unknown> };
@@ -44,7 +44,7 @@ describe('POST /api/auth/register — como ADMIN (integración Supabase)', () =>
       const { user: admin, cookie } = await loginAs(tx, 'ADMIN');
       const res = await call(app, 'POST', '/api/auth/register', {
         cookie,
-        body: { email: 'auditado@example.com', rol: 'ALUMNO' },
+        body: await registerBody(tx, 'ALUMNO', 'auditado@example.com'),
       });
       const { user } = (await res.json()) as { user: { id: string } };
       const [row] = await tx`select id_usuario from "Audit_log" where tabla = 'User' and id_registro = ${user.id}`;
@@ -55,11 +55,11 @@ describe('POST /api/auth/register — como ADMIN (integración Supabase)', () =>
   it.runIf(hasDb)('email ya registrado → 409 genérico', async () => {
     await withApp(async ({ app, tx }) => {
       const { cookie } = await loginAs(tx, 'ADMIN');
-      const body = { email: 'repetido@example.com', rol: 'SOCIO' };
+      const body = await registerBody(tx, 'SOCIO', 'repetido@example.com');
       expect((await call(app, 'POST', '/api/auth/register', { cookie, body })).status).toBe(201);
       const res = await call(app, 'POST', '/api/auth/register', {
         cookie,
-        body: { email: 'REPETIDO@example.com', rol: 'ALUMNO' },
+        body: await registerBody(tx, 'ALUMNO', 'REPETIDO@example.com'),
       });
       expect(res.status).toBe(409);
       expect(await res.json()).toEqual({ error: 'No se ha podido completar el registro' });
@@ -69,11 +69,23 @@ describe('POST /api/auth/register — como ADMIN (integración Supabase)', () =>
   it.runIf(hasDb)('datos no válidos → 400 (email, rol, cuerpo)', async () => {
     await withApp(async ({ app, tx }) => {
       const { cookie } = await loginAs(tx, 'ADMIN');
+      const companyId = await nuevaEmpresa(tx);
+      const editionId = await nuevaEdicion(tx);
+      const inexistente = '00000000-0000-4000-8000-000000000999';
       for (const body of [
-        { email: 'no-es-email', rol: 'SOCIO' },
+        { email: 'no-es-email', rol: 'SOCIO', company_id: companyId },
         { email: 'x@example.com', rol: 'JEFE' },
         { email: 'x@example.com' },
-        { rol: 'SOCIO' },
+        { rol: 'SOCIO', company_id: companyId },
+        // SOCIO siempre vinculado a una empresa existente.
+        { email: 'x@example.com', rol: 'SOCIO' },
+        { email: 'x@example.com', rol: 'SOCIO', company_id: inexistente },
+        { email: 'x@example.com', rol: 'SOCIO', company_id: 'no-uuid' },
+        // ALUMNO siempre con ficha en una edición existente.
+        { email: 'x@example.com', rol: 'ALUMNO' },
+        { email: 'x@example.com', rol: 'ALUMNO', edition_id: editionId },
+        { email: 'x@example.com', rol: 'ALUMNO', nombre: 'Sin edición' },
+        { email: 'x@example.com', rol: 'ALUMNO', edition_id: inexistente, nombre: 'X' },
       ]) {
         const res = await call(app, 'POST', '/api/auth/register', { cookie, body });
         expect(res.status).toBe(400);
@@ -95,11 +107,42 @@ describe('POST /api/auth/register — como ADMIN (integración Supabase)', () =>
   it.runIf(hasDb)('la cuenta invitada no puede entrar hasta fijar su contraseña', async () => {
     await withApp(async ({ app, tx }) => {
       const { cookie } = await loginAs(tx, 'ADMIN');
-      await call(app, 'POST', '/api/auth/register', { cookie, body: { email: 'sinpass@example.com', rol: 'SOCIO' } });
+      await call(app, 'POST', '/api/auth/register', { cookie, body: await registerBody(tx, 'SOCIO', 'sinpass@example.com') });
       const res = await call(app, 'POST', '/api/auth/login', {
         body: { email: 'sinpass@example.com', password: 'contrasena-adivinada' },
       });
       expect(res.status).toBe(401);
+    });
+  });
+
+  it.runIf(hasDb)('SOCIO queda vinculado a su empresa (no hay cuentas de empresa sueltas)', async () => {
+    await withApp(async ({ app, tx }) => {
+      const { cookie } = await loginAs(tx, 'ADMIN');
+      const companyId = await nuevaEmpresa(tx, 'Vinculada SL');
+      const res = await call(app, 'POST', '/api/auth/register', {
+        cookie,
+        body: { email: 'vinculado@example.com', rol: 'SOCIO', company_id: companyId },
+      });
+      expect(res.status).toBe(201);
+      const { user } = (await res.json()) as { user: { id: string } };
+      const rels = await tx`select company_id from "Company_user_rel" where user_id = ${user.id}`;
+      expect(rels.map((r) => r.company_id)).toEqual([companyId]);
+    });
+  });
+
+  it.runIf(hasDb)('ALUMNO nace con su ficha Student (inactiva) en la edición indicada', async () => {
+    await withApp(async ({ app, tx }) => {
+      const { cookie } = await loginAs(tx, 'ADMIN');
+      const editionId = await nuevaEdicion(tx, 'Edición Register');
+      const res = await call(app, 'POST', '/api/auth/register', {
+        cookie,
+        body: { email: 'con-ficha@example.com', rol: 'ALUMNO', edition_id: editionId, nombre: 'Carla' },
+      });
+      expect(res.status).toBe(201);
+      const { user } = (await res.json()) as { user: { id: string; rol: string } };
+      expect(user.rol).toBe('ALUMNO');
+      const [s] = await tx`select edition_id, nombre, estado from "Student" where user_id = ${user.id}`;
+      expect(s).toMatchObject({ edition_id: editionId, nombre: 'Carla', estado: 'inactivo' });
     });
   });
 });

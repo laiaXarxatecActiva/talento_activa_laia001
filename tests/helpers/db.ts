@@ -130,3 +130,26 @@ export async function alumnoConFicha(
   }
   return { user, cookie, studentId: student!.id, editionId: edition!.id };
 }
+
+/** Crea una empresa directamente en BD y devuelve su id. */
+export async function nuevaEmpresa(tx: TransactionSql, nombre = 'Empresa Test'): Promise<string> {
+  const [c] = await tx<{ id: string }[]>`insert into "Company" (nombre) values (${nombre}) returning id`;
+  return c!.id;
+}
+
+/** Crea una edición directamente en BD y devuelve su id. */
+export async function nuevaEdicion(tx: TransactionSql, nombre = 'Edición Test'): Promise<string> {
+  const [e] = await tx<{ id: string }[]>`insert into "Edition" (nombre, anio) values (${nombre}, 2026) returning id`;
+  return e!.id;
+}
+
+/** Cuerpo válido de POST /api/auth/register para cada rol invitable. */
+export async function registerBody(
+  tx: TransactionSql,
+  rol: 'SOCIO' | 'ALUMNO',
+  email: string,
+): Promise<Record<string, string>> {
+  return rol === 'SOCIO'
+    ? { email, rol, company_id: await nuevaEmpresa(tx) }
+    : { email, rol, edition_id: await nuevaEdicion(tx), nombre: 'Alumno Invitado' };
+}

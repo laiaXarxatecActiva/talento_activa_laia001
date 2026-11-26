@@ -45,8 +45,10 @@ function toRel(path) {
   return relative(ROOT, path).split(sep).join('/');
 }
 
+// Además de los tests, se pueden bloquear los ficheros de apoyo de
+// tests/helpers/: los tests bloqueados dependen de ellos.
 function isTestFile(relPath) {
-  return TEST_RE.test(relPath);
+  return TEST_RE.test(relPath) || relPath.startsWith('tests/helpers/');
 }
 
 function walkTests(dir = ROOT, acc = []) {

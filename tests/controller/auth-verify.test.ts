@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { hasDb, withApp, appSinBd, loginAs, call, PASSWORD } from '../helpers/db.js';
+import { hasDb, withApp, appSinBd, loginAs, call, registerBody, PASSWORD } from '../helpers/db.js';
 import type { EmailMessage } from '../../src/model/email.js';
 
 function tokenDelEmail(m: EmailMessage | undefined): string {
@@ -23,7 +23,7 @@ describe('Flujo de invitación (integración Supabase)', () => {
       const { cookie } = await loginAs(tx, 'ADMIN');
       const res = await call(app, 'POST', '/api/auth/register', {
         cookie,
-        body: { email: 'flujo-1@example.com', rol: 'SOCIO' },
+        body: await registerBody(tx, 'SOCIO', 'flujo-1@example.com'),
       });
       expect(res.status).toBe(201);
       expect(outbox).toHaveLength(1);
@@ -37,7 +37,7 @@ describe('Flujo de invitación (integración Supabase)', () => {
   it.runIf(hasDb)('invitar → verificar con contraseña → login → /api/me', async () => {
     await withApp(async ({ app, tx, outbox }) => {
       const { cookie } = await loginAs(tx, 'ADMIN');
-      await call(app, 'POST', '/api/auth/register', { cookie, body: { email: 'flujo-2@example.com', rol: 'ALUMNO' } });
+      await call(app, 'POST', '/api/auth/register', { cookie, body: await registerBody(tx, 'ALUMNO', 'flujo-2@example.com') });
       const token = tokenDelEmail(outbox[0]);
 
       const ver = await call(app, 'POST', '/api/auth/verify', { body: { token, password: PASSWORD } });
@@ -55,7 +55,7 @@ describe('Flujo de invitación (integración Supabase)', () => {
   it.runIf(hasDb)('token inválido o ya usado → 400 "Enlace no válido o caducado"', async () => {
     await withApp(async ({ app, tx, outbox }) => {
       const { cookie } = await loginAs(tx, 'ADMIN');
-      await call(app, 'POST', '/api/auth/register', { cookie, body: { email: 'flujo-3@example.com', rol: 'SOCIO' } });
+      await call(app, 'POST', '/api/auth/register', { cookie, body: await registerBody(tx, 'SOCIO', 'flujo-3@example.com') });
       const token = tokenDelEmail(outbox[0]);
       await call(app, 'POST', '/api/auth/verify', { body: { token, password: PASSWORD } });
 
@@ -73,7 +73,7 @@ describe('Flujo de invitación (integración Supabase)', () => {
         const { cookie } = await loginAs(tx, 'ADMIN');
         const res = await call(app, 'POST', '/api/auth/register', {
           cookie,
-          body: { email: 'flujo-4@example.com', rol: 'SOCIO' },
+          body: await registerBody(tx, 'SOCIO', 'flujo-4@example.com'),
         });
         expect(res.status).toBe(502);
         expect(await res.json()).toEqual({ error: 'No se ha podido enviar el email' });
@@ -105,7 +105,7 @@ describe('POST /api/admin/users/:id/invitation — reenviar invitación', () => 
       const { cookie } = await loginAs(tx, 'ADMIN');
       const reg = await call(app, 'POST', '/api/auth/register', {
         cookie,
-        body: { email: 'reenvio@example.com', rol: 'SOCIO' },
+        body: await registerBody(tx, 'SOCIO', 'reenvio@example.com'),
       });
       const { user } = (await reg.json()) as { user: { id: string } };
       const viejo = tokenDelEmail(outbox[0]);
